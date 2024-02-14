@@ -1,0 +1,20 @@
+FROM registry.redhat.io/ubi9/ubi
+
+USER root
+
+ADD files/files-rhel9.tgz /
+
+RUN dnf config-manager --set-disable Default_Organization_EPEL_EPEL8 && \
+    dnf -y update && \
+    dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
+    dnf repolist && \
+    dnf -y install ddclient && \
+    dnf -y clean all && \
+    cp /etc/ddclient.conf /etc/ddclient.conf.ori && \
+    cp /etc/ddclient.conf.new /etc/ddclient.conf && \
+    chgrp -R 0 /etc/ddclient.conf /var/run/ddclient /var/cache/ddclient && \
+    chmod -R g=u /etc/ddclient.conf* /var/run/ddclient /var/cache/ddclient
+
+CMD ["/usr/sbin/ddclient","-foreground","-verbose","-debug"]
+
+USER 1001
