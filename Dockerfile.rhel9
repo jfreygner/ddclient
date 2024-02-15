@@ -4,14 +4,15 @@ USER root
 
 ADD files/files-rhel9.tgz /
 
-RUN dnf config-manager --set-disable Default_Organization_EPEL_EPEL8 && \
-    dnf -y update && \
-    dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
-    dnf repolist && \
-    dnf -y install ddclient && \
+# remove procps-ng iputils iproute for production images
+RUN sed -i".ori" -e 's/^enabled=1/enabled=0/' /etc/yum/pluginconf.d/subscription-manager.conf && \
+    dnf -y --nodocs update && \
+    dnf -y --nodocs install ddclient procps-ng iputils iproute && \
     dnf -y clean all && \
     cp /etc/ddclient.conf /etc/ddclient.conf.ori && \
     cp /etc/ddclient.conf.new /etc/ddclient.conf && \
+    rm -f /etc/ddclient.conf.new && \
+    rm -rf /etc/pki/entitlement/* && \
     chgrp -R 0 /etc/ddclient.conf /var/run/ddclient /var/cache/ddclient && \
     chmod -R g=u /etc/ddclient.conf* /var/run/ddclient /var/cache/ddclient
 
